@@ -2,7 +2,12 @@ package app.messages;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceUtils;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
@@ -12,12 +17,38 @@ import java.sql.*;
 @Repository
 public class MessageRepository {
     private final static Log logger = LogFactory.getLog(MessageRepository.class);
-    private DataSource dataSource; // spring-boot-start-jdbc에서 의존성 주입됨
-    public MessageRepository(DataSource dataSource){
-        this.dataSource = dataSource;
+    private NamedParameterJdbcTemplate jdbcTemplate;
+    @Autowired
+    public void setDataSource(DataSource dataSource){ // spring-boot-start-jdbc에서 의존성 주입됨
+        this.jdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
     }
 
     public Message saveMessage(Message message){
+        GeneratedKeyHolder holder = new GeneratedKeyHolder();// 생성된 id를 보관할 홀더
+        MapSqlParameterSource params = new MapSqlParameterSource(); //객체로 표현
+        params.addValue("text", message.getText());
+        params.addValue("createdDate", message.getCreatedDate());
+        String insertSQL = "INSERT INTO messages (`id`, `text`, `created_date`) VALUE (null, :text, :createdDate)";
+        try{
+            this.jdbcTemplate.update(insertSQL, params, holder);
+        }catch (DataAccessException e){
+            logger.error("Failed to save message", e);
+            return null;
+        }
+        return new Message(holder.getKey().intValue(),
+                message.getText(), message.getCreatedDate());
+    }
+
+
+
+
+
+
+    //private DataSource dataSource; // spring-boot-start-jdbc에서 의존성 주입됨
+    /*public MessageRepository(DataSource dataSource){
+        this.dataSource = dataSource;
+    }*/
+    /*public Message saveMessage(Message message){
         System.out.println("saveMessage");
         // DB연결을 위한 스프링 헬퍼 클래스인 DataSourceUtils 사용
         Connection c = DataSourceUtils.getConnection(dataSource);
@@ -54,5 +85,5 @@ public class MessageRepository {
             DataSourceUtils.releaseConnection(c, dataSource);
         }
         return null;
-    }
+    }*/
 }
