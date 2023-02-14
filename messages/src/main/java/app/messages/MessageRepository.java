@@ -4,11 +4,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
 
-@Component
+@Repository
 public class MessageRepository {
     private final static Log logger = LogFactory.getLog(MessageRepository.class);
     private DataSource dataSource; // spring-boot-start-jdbc에서 의존성 주입됨
@@ -17,10 +18,11 @@ public class MessageRepository {
     }
 
     public Message saveMessage(Message message){
+        System.out.println("saveMessage");
         // DB연결을 위한 스프링 헬퍼 클래스인 DataSourceUtils 사용
         Connection c = DataSourceUtils.getConnection(dataSource);
         try{
-            String insertSql = "INSERT INTO messages('id', 'text', 'created_date') VALUES (null, ?, ?)";
+            String insertSql = "INSERT INTO messages (`id`, `text`, `created_date`) VALUES (null, ?, ?)";
             PreparedStatement ps = c.prepareStatement(insertSql, Statement.RETURN_GENERATED_KEYS);
             //SQL에 필요한 매개변수
             ps.setString(1, message.getText());
@@ -42,6 +44,7 @@ public class MessageRepository {
             }
         }catch (SQLException ex){
             logger.error("Failed to save message", ex);
+            //연결한 커넥션 닫기. 닫지 않으면 연결은 커넥션 풀로 반환되지 않고 다른 연결에 의해 재사용된다.
             try{
                 c.close();
             }catch (SQLException e){
