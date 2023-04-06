@@ -25,12 +25,6 @@
 <body>
 <div id="app" v-cloak>
     <message-list :items="messages" @delete="deleteMessage"></message-list>
-    <ul>
-        <li v-for="message in messages">
-            {{message.text}} - {{message.createdAt}}
-            <button @click="deleteMessage(message)">X</button>
-        </li>
-    </ul>
     <form @submit.prevent="addMessage">
         <textarea v-model="newMessage" placeholder="Leave a message">
         </textarea>
