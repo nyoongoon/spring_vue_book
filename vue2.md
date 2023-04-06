@@ -1,3 +1,4 @@
+
 # Vue 인스턴스
 - 루트 Vue 인스턴스와 컴포넌트 인스턴스로 구성됨.
 ```vue
@@ -38,27 +39,52 @@ new Vue({/* options */})
 
 
 
+# 컴포넌트 
+- Vue컴포넌트는 Vue인스턴스이기도 함.
+- Vue컴포넌트는 생성 중에 Vue 인스턴스와 같은 options 객체를 받음.
+- 컴포넌트를 전체 애플리케이션에서 활용할 수 있게 전역을 등록 가능
+```
+Vue.component(id, [definitnion]) 사용 //아이디, //options객체이거나options객체를 반환하는 함수
+```
 
 
 # options 객체
 ## data 프로퍼티
-
-
 ## methods 프로퍼티
 - options 객체의 methods 프로퍼티
 - 단일 객체를 가짐.
 - 이 객체에서 사용하는 모든 메소드를 담음.
 - 이 메소드 내에서는 ***this로 data 프로퍼티에 접근***할 수 있음.
-
+- 화살표 함수구문 사용X, this로 Vue 인스턴스에 접근할 수 없게 됨
 
 ## computed 프로퍼티
+- data 객체 내 프로퍼티와 달리 계산된 값.
 - Vue.js는 computed 프로퍼티에 종속된 대상을 추적하고 종속된 대상이 변경될 때 프로퍼티의 값을 업데이트함.
 - options 객체 내의 computed 프로퍼티 객체의 메소드로 정의함
 
-
 ## props 프로퍼티
+- Vue.js에서 컴포넌트는 자체의 고립된 스코프를 가짐 -> props를 사용하여 해결 !
 - props 프로퍼티로 컴포넌트에 전달할 수 있는 데이터를 정의 가능.
 - props 프로퍼티는 배열 또는 객체를 값으로 가짐.
+- **부모 컴포넌트 -> DATA -> 자식 컴포넌트**
+- 자식 컴포넌트에서 props 옵션을 선언하고, 부모 컴포넌트에서 props 바인딩하여 채워넣음. 
+```vue
+//부모
+<message-list :items="messages" @delete="deleteMessage"></message-list> //부모에서 :items로 바인딩 (v-bind)
+```
+```javascript
+export default{
+    name: 'MessageList',
+    template: `<ul><message-list-item v-for="item in items" :item="item"
+                :key="item.id" @delete="deleteMessage(item)"></message-list-item></ul>`,
+    props: { // props 설정 !
+        items: {
+            type: Array,
+            required: true
+        }
+    }
+}
+```
 
 
 # 지시자
@@ -82,7 +108,7 @@ new Vue({/* options */})
 ## v-cloak
 - Vue.js는 생성된 DOM이 준비되면 v-cloak 지시자를 제거함.
 ## v-for
-- v-for 지시자로 렌더링된 컴포넌트 리스트는 명시적인 키를 가져와야함.
+- **v-for 지시자로 렌더링된 컴포넌트 리스트는 명시적인 키를 가져와야함 !!!**.
 - Vue는 리스트에서 어떤 아이템이 변경됐는지 추적해 DOM에서 해당 부분만 업데이트할 수 있도록 리스트에서 아이템의 고유 아이디가 될 수 있는 키를 요청.
 
 
@@ -105,6 +131,23 @@ new Vue({/* options */})
 ## $emit()
 - 현재 인스턴스의 이벤트를 트리거 할 수 있는 메소드
 - 자식 컴포넌트에서 $emit('이벤트명', '데이터')를 통해 부모 컴포넌트로 이벤트를 보냄(트리거 함)
+- **자식 -> 이벤트 -> 부모**
+```vue
+<!--부모-->
+<message-list :items="messages" @delete="deleteMessage"></message-list>
+```
+```javascript
+//자식
+export default {
+    name: MessageList,
+    //...,
+    methods: {
+        deleteMessage(message){
+            this.$emit('delete', message); //부모 컴포넌트로 보내지는 이벤트
+        }
+    }
+}
+```
 
 # 필터
 - 필터를 이용해 이중 중괄표 보간법 혹은 v-bind 표현법을 이용할 때 텍스트 형식을 지정.
